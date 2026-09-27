@@ -1,0 +1,63 @@
+services:
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: attendance_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: attendance_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - attendance-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: attendance_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres_db
+      DB_PORT: 5432
+      DB_DATABASE: attendance_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: secretpassword
+    depends_on:
+      - postgres_db
+    networks:
+      - attendance-net
+
+  frontend:
+    build:
+      context: ./admin-dashboard
+      dockerfile: Dockerfile
+    container_name: attendance_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./admin-dashboard:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+    depends_on:
+      - backend
+    networks:
+      - attendance-net
+
+volumes:
+  pg_data:
+
+networks:
+  attendance-net:
+    driver: bridge
