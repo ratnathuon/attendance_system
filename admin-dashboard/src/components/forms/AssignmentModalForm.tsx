@@ -87,7 +87,7 @@ export const AssignmentModalForm: React.FC<AssignmentModalFormProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs">
             {error}
           </div>
         )}
@@ -159,7 +159,7 @@ export const AssignmentModalForm: React.FC<AssignmentModalFormProps> = ({
           onChange={(e) => setRoom(e.target.value)}
         />
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
           <Button
             type="button"
             variant="ghost"

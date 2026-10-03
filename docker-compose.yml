@@ -31,6 +31,7 @@ services:
       DB_DATABASE: attendance_db
       DB_USERNAME: postgres
       DB_PASSWORD: secretpassword
+      PHP_CLI_SERVER_WORKERS: 4
     depends_on:
       - postgres_db
     networks:
@@ -50,6 +51,7 @@ services:
       - /app/.next
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api
+      WATCHPACK_POLLING: "true"
     depends_on:
       - backend
     networks:

@@ -23,6 +23,14 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/', function () {
+    return response()->json([
+        'status' => 'online',
+        'service' => 'Attendance System API',
+        'version' => '1.0.0',
+    ]);
+});
+
 // Public Authentication
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);

@@ -101,15 +101,15 @@ export default function SubjectsPage() {
       header: "Subject Name & Code",
       cell: (subj) => (
         <div>
-          <div className="font-semibold text-white">{subj.name}</div>
-          <div className="text-xs text-indigo-400 font-mono">{subj.code}</div>
+          <div className="font-semibold text-slate-900">{subj.name}</div>
+          <div className="text-xs text-indigo-600 font-mono font-medium">{subj.code}</div>
         </div>
       ),
     },
     {
       header: "Credits",
       cell: (subj) => (
-        <span className="text-xs text-slate-300 font-medium">
+        <span className="text-xs text-slate-700 font-medium">
           {subj.credit_hours} SKS / Credits
         </span>
       ),
@@ -117,7 +117,7 @@ export default function SubjectsPage() {
     {
       header: "Description",
       cell: (subj) => (
-        <span className="text-xs text-slate-400 line-clamp-1">
+        <span className="text-xs text-slate-500 line-clamp-1">
           {subj.description || "-"}
         </span>
       ),
@@ -129,10 +129,10 @@ export default function SubjectsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             Subjects & Faculty Assignments
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Curriculum subjects, lecture schedules, and teacher assignment to classrooms.
           </p>
         </div>
@@ -156,55 +156,55 @@ export default function SubjectsPage() {
 
       {/* Teacher Teaching Assignments Grid */}
       <div className="space-y-4">
-        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
           Active Class Schedules & Teaching Faculty
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {assignments.length === 0 ? (
-            <div className="col-span-full p-8 rounded-2xl border border-slate-800 bg-slate-900/40 text-center text-xs text-slate-400">
+            <div className="col-span-full p-8 rounded-2xl border border-slate-200 bg-white text-center text-xs text-slate-500 shadow-xs">
               No class-subject teacher assignments configured yet. Click &quot;Assign Teacher&quot; above.
             </div>
           ) : (
             assignments.map((item) => (
               <div
                 key={item.id}
-                className="p-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl relative group glow-card"
+                className="p-5 rounded-2xl border border-slate-200 bg-white relative group shadow-xs hover:border-slate-300 transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
                       {item.class_room?.code}
                     </span>
-                    <h4 className="text-sm font-bold text-white mt-0.5">
+                    <h4 className="text-sm font-bold text-slate-900 mt-0.5">
                       {item.subject?.name}
                     </h4>
                   </div>
                   <button
                     onClick={() => handleDeleteAssignment(item.id)}
-                    className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                     title="Remove assignment"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-800 space-y-2 text-xs">
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <UserCheck className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-                    <span className="font-semibold text-white">
+                <div className="mt-4 pt-4 border-t border-slate-100 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 text-slate-800">
+                    <UserCheck className="w-3.5 h-3.5 text-violet-600 shrink-0" />
+                    <span className="font-semibold text-slate-900">
                       {item.teacher?.name || "Teacher"}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span>{item.schedule_day || "Flexible Schedule"}</span>
                   </div>
 
                   {item.start_time && (
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span>
                         {item.start_time} - {item.end_time || ""} ({item.room || "Room TBD"})
                       </span>
@@ -219,7 +219,7 @@ export default function SubjectsPage() {
 
       {/* Subjects Catalog */}
       <div className="space-y-4">
-        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
           Curriculum Subject Catalog
         </h3>
         <DataTable

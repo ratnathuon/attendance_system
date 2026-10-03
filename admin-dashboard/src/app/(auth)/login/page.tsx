@@ -52,30 +52,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#090d16]">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
       {/* Ambient background glows */}
-      <div className="absolute top-1/4 -left-48 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-48 w-96 h-96 bg-indigo-200/50 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-violet-200/50 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo and header */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 items-center justify-center shadow-xl shadow-indigo-500/25 border border-indigo-400/30 mb-4">
+          <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 items-center justify-center shadow-lg shadow-indigo-500/20 border border-indigo-400/30 mb-4">
             <ShieldCheck className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">
-            Attend<span className="text-indigo-400">Sphere</span>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Attend<span className="text-indigo-600">Sphere</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Enterprise Smart Attendance & QR Verification
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-3xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-2xl p-8 shadow-2xl glow-card">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-medium">
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium">
                 {error}
               </div>
             )}
@@ -114,54 +114,54 @@ export default function LoginPage() {
           </form>
 
           {/* Demo Credentials Quick Fill */}
-          <div className="mt-8 pt-6 border-t border-slate-800/80">
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
               <span>Quick Login (Demo Accounts):</span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => quickFill("admin@attendance.com")}
-                className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50 text-left transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-left transition-colors cursor-pointer"
               >
-                <div className="font-semibold text-rose-400">Admin</div>
-                <div className="text-[10px] text-slate-400 truncate">admin@attendance.com</div>
+                <div className="font-semibold text-rose-700">Admin</div>
+                <div className="text-[10px] text-slate-500 truncate">admin@attendance.com</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => quickFill("teacher@attendance.com")}
-                className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50 text-left transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-left transition-colors cursor-pointer"
               >
-                <div className="font-semibold text-indigo-400">Teacher</div>
-                <div className="text-[10px] text-slate-400 truncate">teacher@attendance.com</div>
+                <div className="font-semibold text-indigo-700">Teacher</div>
+                <div className="text-[10px] text-slate-500 truncate">teacher@attendance.com</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => quickFill("mazer@attendance.com")}
-                className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50 text-left transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-left transition-colors cursor-pointer"
               >
-                <div className="font-semibold text-amber-400">Mazer (Advisor)</div>
-                <div className="text-[10px] text-slate-400 truncate">mazer@attendance.com</div>
+                <div className="font-semibold text-amber-800">Mazer (Advisor)</div>
+                <div className="text-[10px] text-slate-500 truncate">mazer@attendance.com</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => quickFill("student@attendance.com")}
-                className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50 text-left transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-left transition-colors cursor-pointer"
               >
-                <div className="font-semibold text-emerald-400">Student</div>
-                <div className="text-[10px] text-slate-400 truncate">student@attendance.com</div>
+                <div className="font-semibold text-emerald-700">Student</div>
+                <div className="text-[10px] text-slate-500 truncate">student@attendance.com</div>
               </button>
             </div>
           </div>
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
+        <p className="text-center text-xs text-slate-500 mt-6">
           Default password for all demo accounts:{" "}
-          <code className="text-indigo-400 font-mono">password123</code>
+          <code className="text-indigo-600 font-mono">password123</code>
         </p>
       </div>
     </div>
