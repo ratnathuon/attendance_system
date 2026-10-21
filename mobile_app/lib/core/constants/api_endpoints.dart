@@ -6,14 +6,14 @@ class ApiEndpoints {
   static const String _compileTimeApiUrl = String.fromEnvironment('API_URL');
 
   // 2. Or paste your live Render/Cloud URL here (e.g. 'https://attendsphere-api.onrender.com/api')
-  static const String productionUrl = '';
+  static const String productionUrl = 'https://attendsphere-api.onrender.com/api';
 
   // Configurable base URL
   static String get baseUrl {
     if (_compileTimeApiUrl.isNotEmpty) {
       return _compileTimeApiUrl;
     }
-    if (kReleaseMode && productionUrl.isNotEmpty) {
+    if (productionUrl.isNotEmpty) {
       return productionUrl;
     }
     if (kIsWeb) {
