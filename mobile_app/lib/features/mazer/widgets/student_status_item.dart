@@ -26,12 +26,14 @@ class StudentStatusItem extends StatelessWidget {
       overallStatus = 'excused';
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1E293B)),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: InkWell(
         onTap: onTap,
@@ -62,10 +64,10 @@ class StudentStatusItem extends StatelessWidget {
                 children: [
                   Text(
                     student['name'] ?? 'Student',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -86,7 +88,10 @@ class StudentStatusItem extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '$present Pres • $absent Abs',
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
                 ),
               ],
             ),

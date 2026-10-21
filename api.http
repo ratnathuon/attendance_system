@@ -1,0 +1,118 @@
+### =========================================================================
+### Attendance System API - HTTP Client Test File
+### Use with VS Code "REST Client" or "Thunder Client" extensions
+### =========================================================================
+
+@baseUrl = http://localhost:8000/api
+@authToken = {{loginAdmin.response.body.token}}
+
+### -------------------------------------------------------------------------
+### 1. HEALTH / STATUS CHECK
+### -------------------------------------------------------------------------
+
+### API Status
+GET {{baseUrl}}
+Accept: application/json
+
+### Laravel Health Check
+GET http://localhost:8000/up
+Accept: application/json
+
+### -------------------------------------------------------------------------
+### 2. AUTHENTICATION
+### -------------------------------------------------------------------------
+
+### Login as Administrator
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "admin@attendance.com",
+  "password": "password123"
+}
+
+### Login as Teacher
+# @name loginTeacher
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "teacher@attendance.com",
+  "password": "password123"
+}
+
+### Login as Student
+# @name loginStudent
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "student@attendance.com",
+  "password": "password123"
+}
+
+### Get Current User Profile (Using Token from Login)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### -------------------------------------------------------------------------
+### 3. ADMIN ENDPOINTS
+### -------------------------------------------------------------------------
+
+### List All Users
+GET {{baseUrl}}/admin/users
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### List All Classes
+GET {{baseUrl}}/admin/classes
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### List All Subjects
+GET {{baseUrl}}/admin/subjects
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### Get Dashboard Overview Analytics
+GET {{baseUrl}}/admin/reports/overview
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### Get Attendance Reports
+GET {{baseUrl}}/admin/reports/attendance
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### -------------------------------------------------------------------------
+### 4. TEACHER ENDPOINTS
+### -------------------------------------------------------------------------
+
+### List Attendance Sessions
+GET {{baseUrl}}/teacher/sessions
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### List Teacher Leave Requests
+GET {{baseUrl}}/teacher/leave-requests
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### -------------------------------------------------------------------------
+### 5. STUDENT ENDPOINTS
+### -------------------------------------------------------------------------
+
+### Get Student Attendance History
+GET {{baseUrl}}/student/history
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### Get Student Attendance Stats
+GET {{baseUrl}}/student/stats
+Authorization: Bearer {{authToken}}
+Accept: application/json

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassRoom;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -48,7 +50,10 @@ class AuthController extends Controller
             $extraData['taught_subjects'] = $user->taughtClassSubjects()->with(['classRoom:id,name,code', 'subject:id,name,code'])->get();
         } elseif ($user->isStudent()) {
             $enrollment = $user->enrollments()->with('classRoom:id,name,code')->where('status', 'active')->first();
-            $extraData['enrolled_class'] = $enrollment?->classRoom;
+            $classRoom = $enrollment?->classRoom ?? $user->enrollments()->with('classRoom:id,name,code')->first()?->classRoom ?? ClassRoom::first();
+            $extraData['enrolled_class'] = $classRoom ? $classRoom->only(['id', 'name', 'code']) : null;
+            $classRoomId = $classRoom?->id;
+            $extraData['announcements_count'] = $classRoomId ? count(Cache::get("class_announcements_{$classRoomId}", [])) : 0;
         }
 
         return response()->json([
@@ -77,12 +82,32 @@ class AuthController extends Controller
 
         $extraData = [];
         if ($user->isMazer()) {
-            $extraData['advised_classes'] = $user->advisedClassRooms()->select('id', 'name', 'code', 'room_number')->get();
+            $advisedClasses = $user->advisedClassRooms()->select('id', 'name', 'code', 'room_number')->get();
+            $extraData['advised_classes'] = $advisedClasses;
+            $classRoomIds = $advisedClasses->pluck('id');
+            $extraData['leave_requests_count'] = \App\Models\LeaveRequest::whereIn('class_room_id', $classRoomIds)->count();
+            $extraData['pending_leave_count'] = \App\Models\LeaveRequest::whereIn('class_room_id', $classRoomIds)->where('status', 'pending')->count();
+            $totalAnnouncements = 0;
+            foreach ($classRoomIds as $cId) {
+                $totalAnnouncements += count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$cId}", []));
+            }
+            $extraData['announcements_count'] = $totalAnnouncements;
+            $extraData['my_leave_requests_count'] = \App\Models\LeaveRequest::where('student_id', $user->id)->count();
         } elseif ($user->isTeacher()) {
-            $extraData['taught_subjects'] = $user->taughtClassSubjects()->with(['classRoom:id,name,code', 'subject:id,name,code'])->get();
+            $taughtSubjects = $user->taughtClassSubjects()->with(['classRoom:id,name,code', 'subject:id,name,code'])->get();
+            $extraData['taught_subjects'] = $taughtSubjects;
+            $classRoomIds = $taughtSubjects->pluck('class_room_id')->unique();
+            $totalAnnouncements = 0;
+            foreach ($classRoomIds as $cId) {
+                $totalAnnouncements += count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$cId}", []));
+            }
+            $extraData['announcements_count'] = $totalAnnouncements;
         } elseif ($user->isStudent()) {
             $enrollment = $user->enrollments()->with('classRoom:id,name,code')->where('status', 'active')->first();
-            $extraData['enrolled_class'] = $enrollment?->classRoom;
+            $classRoom = $enrollment?->classRoom ?? $user->enrollments()->with('classRoom:id,name,code')->first()?->classRoom ?? ClassRoom::first();
+            $extraData['enrolled_class'] = $classRoom ? $classRoom->only(['id', 'name', 'code']) : null;
+            $classRoomId = $classRoom?->id;
+            $extraData['announcements_count'] = $classRoomId ? count(Cache::get("class_announcements_{$classRoomId}", [])) : 0;
         }
 
         return response()->json([
@@ -102,6 +127,75 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully.',
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's editable profile fields.
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        $user = $request->user();
+        $user->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'user' => $user->fresh(),
+        ]);
+    }
+
+    /**
+     * Upload / replace the authenticated user's profile picture.
+     */
+    public function updateAvatar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'max:4096'],
+        ]);
+
+        $user = $request->user();
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->update([
+            'avatar_url' => $request->getSchemeAndHttpHost() . '/storage/' . $path,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile picture updated.',
+            'user' => $user->fresh(),
+        ]);
+    }
+
+    /**
+     * Change the authenticated user's password.
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:6', 'different:current_password'],
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password is incorrect.',
+            ], 422);
+        }
+
+        $user->update(['password' => $request->new_password]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully.',
         ]);
     }
 }

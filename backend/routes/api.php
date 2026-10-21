@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\ClassRoomController;
+use App\Http\Controllers\Admin\LeaveRequestManagementController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\SystemReportController;
 use App\Http\Controllers\Admin\UserController;
@@ -23,6 +24,14 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/', function () {
+    return response()->json([
+        'status' => 'online',
+        'service' => 'Attendance System API',
+        'version' => '1.0.0',
+    ]);
+});
+
 // Public Authentication
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -34,6 +43,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::put('/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/avatar', [AuthController::class, 'updateAvatar']);
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 
     // -------------------------------------------------------------------------
@@ -60,6 +72,19 @@ Route::middleware('auth:sanctum')->group(function () {
         // System Reports & Analytics
         Route::get('/reports/overview', [SystemReportController::class, 'dashboardOverview']);
         Route::get('/reports/attendance', [SystemReportController::class, 'attendanceReport']);
+
+        // Leave Requests Management
+        Route::get('/leave-requests', [LeaveRequestManagementController::class, 'index']);
+        Route::get('/leave-requests/{leaveRequest}', [LeaveRequestManagementController::class, 'show']);
+        Route::put('/leave-requests/{leaveRequest}', [LeaveRequestManagementController::class, 'update']);
+        Route::delete('/leave-requests/{leaveRequest}', [LeaveRequestManagementController::class, 'destroy']);
+
+        // Announcements Management
+        Route::get('/announcements', [ClassAnnouncementController::class, 'allAdmin']);
+        Route::get('/classes/{classRoom}/announcements', [ClassAnnouncementController::class, 'index']);
+        Route::post('/classes/{classRoom}/announcements', [ClassAnnouncementController::class, 'store']);
+        Route::put('/classes/{classRoom}/announcements/{announcementId}', [ClassAnnouncementController::class, 'update']);
+        Route::delete('/classes/{classRoom}/announcements/{announcementId}', [ClassAnnouncementController::class, 'destroy']);
     });
 
     // -------------------------------------------------------------------------
@@ -77,15 +102,27 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sessions/{session}/attendance', [SubjectAttendanceController::class, 'markAttendance']);
         Route::post('/sessions/{session}/batch-attendance', [SubjectAttendanceController::class, 'batchMark']);
 
+        // Subject Attendance Report (for PDF Export)
+        Route::get('/subjects/{classSubject}/report', [SubjectAttendanceController::class, 'subjectReport']);
+
         // Teacher Leave Approvals
         Route::get('/leave-requests', [TeacherLeaveApprovalController::class, 'index']);
         Route::post('/leave-requests/{leaveRequest}/status', [TeacherLeaveApprovalController::class, 'updateStatus']);
+        Route::put('/leave-requests/{leaveRequest}', [TeacherLeaveApprovalController::class, 'update']);
+        Route::delete('/leave-requests/{leaveRequest}', [TeacherLeaveApprovalController::class, 'destroy']);
+
+        // Class Announcements
+        Route::get('/announcements', [ClassAnnouncementController::class, 'teacherAnnouncements']);
+        Route::get('/classes/{classRoom}/announcements', [ClassAnnouncementController::class, 'index']);
+        Route::post('/classes/{classRoom}/announcements', [ClassAnnouncementController::class, 'store']);
+        Route::put('/classes/{classRoom}/announcements/{announcementId}', [ClassAnnouncementController::class, 'update']);
+        Route::delete('/classes/{classRoom}/announcements/{announcementId}', [ClassAnnouncementController::class, 'destroy']);
     });
 
     // -------------------------------------------------------------------------
     // MAZER ENDPOINTS (Class Advisor / Homeroom)
     // -------------------------------------------------------------------------
-    Route::prefix('mazer')->middleware('role:mazer,admin')->group(function () {
+    Route::prefix('mazer')->middleware('role:mazer,teacher,admin')->group(function () {
         // Class Attendance Roster & Override
         Route::get('/classes/{classRoom}/roster', [ClassAttendanceController::class, 'classRoster']);
         Route::post('/classes/{classRoom}/override', [ClassAttendanceController::class, 'overrideRecord']);
@@ -97,12 +134,17 @@ Route::middleware('auth:sanctum')->group(function () {
         // Announcements
         Route::get('/classes/{classRoom}/announcements', [ClassAnnouncementController::class, 'index']);
         Route::post('/classes/{classRoom}/announcements', [ClassAnnouncementController::class, 'store']);
+        Route::put('/classes/{classRoom}/announcements/{announcementId}', [ClassAnnouncementController::class, 'update']);
+        Route::delete('/classes/{classRoom}/announcements/{announcementId}', [ClassAnnouncementController::class, 'destroy']);
+
+        // QR Scan Check-in for Mazer
+        Route::post('/scan', [AttendanceScanController::class, 'scan'])->middleware('session.valid');
     });
 
     // -------------------------------------------------------------------------
     // STUDENT ENDPOINTS
     // -------------------------------------------------------------------------
-    Route::prefix('student')->middleware('role:student,admin')->group(function () {
+    Route::prefix('student')->middleware('role:student,mazer,admin')->group(function () {
         // Dynamic QR Scan Check-in
         Route::post('/scan', [AttendanceScanController::class, 'scan'])->middleware('session.valid');
 
@@ -114,5 +156,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
         Route::post('/leave-requests', [LeaveRequestController::class, 'store']);
         Route::get('/leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show']);
+
+        // Announcements
+        Route::get('/announcements', [ClassAnnouncementController::class, 'studentAnnouncements']);
+        Route::get('/classes/{classRoom}/announcements', [ClassAnnouncementController::class, 'index']);
     });
 });

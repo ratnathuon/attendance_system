@@ -53,10 +53,11 @@ class _ClassRosterScreenState extends State<ClassRosterScreen> {
     final student = studentItem['student'] ?? {};
     final studentId = student['id'] as int;
     final records = studentItem['records'] as List<dynamic>? ?? [];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -69,12 +70,16 @@ class _ClassRosterScreenState extends State<ClassRosterScreen> {
             children: [
               Text(
                 'Mazer Override: ${student['name']}',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
               ),
               const SizedBox(height: 4),
-              Text(
+              const Text(
                 'Homeroom Advisor administrative status adjustment',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
               ),
               const SizedBox(height: 18),
               if (records.isEmpty)
@@ -92,7 +97,10 @@ class _ClassRosterScreenState extends State<ClassRosterScreen> {
                     contentPadding: EdgeInsets.zero,
                     title: Text(
                       'Session #$sessionId (Current: ${r['status']})',
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        fontSize: 13,
+                      ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

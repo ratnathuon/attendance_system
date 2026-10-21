@@ -70,10 +70,11 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
   void _showStatusDialog(dynamic item) {
     final student = item['student'] ?? {};
     final studentId = student['id'] as int;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -86,10 +87,10 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
             children: [
               Text(
                 'Mark Status: ${student['name']}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 6),
@@ -98,10 +99,10 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
                 style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
               ),
               const SizedBox(height: 18),
-              _statusOption('present', 'Mark Present (On-time)', AppTheme.success, ctx, studentId),
-              _statusOption('late', 'Mark Late', AppTheme.warning, ctx, studentId),
-              _statusOption('absent', 'Mark Absent', AppTheme.error, ctx, studentId),
-              _statusOption('excused', 'Mark Excused / Permitted', AppTheme.info, ctx, studentId),
+              _statusOption('present', 'Mark Present (On-time)', AppTheme.success, ctx, studentId, isDark),
+              _statusOption('late', 'Mark Late', AppTheme.warning, ctx, studentId, isDark),
+              _statusOption('absent', 'Mark Absent', AppTheme.error, ctx, studentId, isDark),
+              _statusOption('excused', 'Mark Excused / Permitted', AppTheme.info, ctx, studentId, isDark),
             ],
           ),
         ),
@@ -115,6 +116,7 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
     Color color,
     BuildContext dialogCtx,
     int studentId,
+    bool isDark,
   ) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -126,7 +128,7 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
       title: Text(
         label,
         style: TextStyle(
-          color: Colors.white,
+          color: isDark ? Colors.white : const Color(0xFF0F172A),
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
@@ -141,6 +143,8 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Roster & Manual Override'),
@@ -166,9 +170,9 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFF1E293B)),
+                          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                         ),
                         child: Row(
                           children: [
@@ -183,7 +187,7 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
                                 child: Text(
                                   (student['name'] as String? ?? 'S').substring(0, 1),
                                   style: const TextStyle(
-                                    color: AppTheme.primaryLight,
+                                    color: AppTheme.primary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -196,10 +200,10 @@ class _ManualAttendanceScreenState extends State<ManualAttendanceScreen> {
                                 children: [
                                   Text(
                                     student['name'] ?? 'Student',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
-                                      color: Colors.white,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                                     ),
                                   ),
                                   Text(

@@ -23,7 +23,8 @@ class MazerLeaveApprovalController extends Controller
             'classRoom:id,name,code',
             'subject:id,name,code',
             'attendanceSession',
-        ])->whereIn('class_room_id', $classRoomIds);
+        ])->whereIn('class_room_id', $classRoomIds)
+          ->where('student_id', '!=', $mazer->id);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

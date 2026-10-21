@@ -5,7 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../widgets/attendance_badge.dart';
 
 class StudentHistoryScreen extends StatefulWidget {
-  const StudentHistoryScreen({super.key});
+  final bool isTab;
+  const StudentHistoryScreen({super.key, this.isTab = false});
 
   @override
   State<StudentHistoryScreen> createState() => _StudentHistoryScreenState();
@@ -52,6 +53,7 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Attendance History'),
+        automaticallyImplyLeading: !widget.isTab,
       ),
       body: Column(
         children: [
@@ -100,6 +102,7 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 12),
                           itemBuilder: (context, index) {
+                            final isDark = Theme.of(context).brightness == Brightness.dark;
                             final r = _records[index];
                             final session = r['attendance_session'] ?? {};
                             final classSubject = session['class_subject'] ?? {};
@@ -110,10 +113,10 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
                             return Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppTheme.surface,
+                                color: isDark ? const Color(0xFF1E293B) : Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: const Color(0xFF1E293B),
+                                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                                 ),
                               ),
                               child: Row(
@@ -126,10 +129,10 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
                                       children: [
                                         Text(
                                           subject['name'] ?? 'Class Lecture',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.white,
+                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -143,17 +146,17 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
                                         const SizedBox(height: 8),
                                         Row(
                                           children: [
-                                            const Icon(
+                                            Icon(
                                               Icons.access_time_rounded,
                                               size: 13,
-                                              color: Color(0xFF64748B),
+                                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
                                               scannedAt,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 11,
-                                                color: Color(0xFF64748B),
+                                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                                               ),
                                             ),
                                           ],
@@ -176,6 +179,7 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
 
   Widget _filterChip(String value, String label) {
     final isSelected = _selectedFilter == value;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
@@ -184,13 +188,13 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+          color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF64748B)),
         ),
-        backgroundColor: AppTheme.surface,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         selectedColor: AppTheme.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: BorderSide(
-          color: isSelected ? AppTheme.primary : const Color(0xFF334155),
+          color: isSelected ? AppTheme.primary : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
         ),
         onSelected: (selected) {
           setState(() {

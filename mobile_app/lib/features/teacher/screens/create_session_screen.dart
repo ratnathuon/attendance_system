@@ -6,8 +6,13 @@ import 'dynamic_qr_screen.dart';
 
 class CreateSessionScreen extends StatefulWidget {
   final List<dynamic> taughtSubjects;
+  final bool isTab;
 
-  const CreateSessionScreen({super.key, required this.taughtSubjects});
+  const CreateSessionScreen({
+    super.key,
+    required this.taughtSubjects,
+    this.isTab = false,
+  });
 
   @override
   State<CreateSessionScreen> createState() => _CreateSessionScreenState();
@@ -69,15 +74,27 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
         final title = session['title'] ?? 'Attendance Session';
 
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => DynamicQrScreen(
-                sessionId: sessionId,
-                sessionTitle: title,
-                initialQrPayload: qrData['qr_payload'],
+          if (widget.isTab) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => DynamicQrScreen(
+                  sessionId: sessionId,
+                  sessionTitle: title,
+                  initialQrPayload: qrData['qr_payload'],
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => DynamicQrScreen(
+                  sessionId: sessionId,
+                  sessionTitle: title,
+                  initialQrPayload: qrData['qr_payload'],
+                ),
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -89,9 +106,12 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Start Attendance Session'),
+        automaticallyImplyLeading: !widget.isTab,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -112,9 +132,13 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 ),
               ),
 
-            const Text(
+            Text(
               'Select Assigned Subject & Cohort',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
             ),
             const SizedBox(height: 8),
 
@@ -122,7 +146,7 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 ? Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Text(
@@ -132,8 +156,23 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                   )
                 : DropdownButtonFormField<int>(
                     initialValue: _selectedClassSubjectId,
-                    decoration: const InputDecoration(),
-                    dropdownColor: AppTheme.surface,
+                    isExpanded: true,
+                    menuMaxHeight: 300,
+                    borderRadius: BorderRadius.circular(16),
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      ),
+                    ),
                     items: widget.taughtSubjects.map((cs) {
                       final subject = cs['subject'] ?? {};
                       final classRoom = cs['class_room'] ?? {};
@@ -142,6 +181,7 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                         child: Text(
                           '${subject['name'] ?? 'Subject'} • ${classRoom['code'] ?? 'Class'}',
                           overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       );
                     }).toList(),
@@ -150,9 +190,13 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
 
             const SizedBox(height: 20),
 
-            const Text(
+            Text(
               'Lecture Topic (Optional)',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -178,11 +222,23 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                       const SizedBox(height: 6),
                       DropdownButtonFormField<int>(
                         initialValue: _durationMinutes,
-                        dropdownColor: AppTheme.surface,
+                        isExpanded: true,
+                        menuMaxHeight: 250,
+                        borderRadius: BorderRadius.circular(16),
+                        dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                         items: const [
-                          DropdownMenuItem(value: 45, child: Text('45 Mins')),
-                          DropdownMenuItem(value: 90, child: Text('90 Mins')),
-                          DropdownMenuItem(value: 120, child: Text('120 Mins')),
+                          DropdownMenuItem(
+                            value: 45,
+                            child: Text('45 Mins', overflow: TextOverflow.ellipsis, maxLines: 1),
+                          ),
+                          DropdownMenuItem(
+                            value: 90,
+                            child: Text('90 Mins', overflow: TextOverflow.ellipsis, maxLines: 1),
+                          ),
+                          DropdownMenuItem(
+                            value: 120,
+                            child: Text('120 Mins', overflow: TextOverflow.ellipsis, maxLines: 1),
+                          ),
                         ],
                         onChanged: (v) => setState(() => _durationMinutes = v ?? 90),
                       ),
@@ -201,11 +257,23 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                       const SizedBox(height: 6),
                       DropdownButtonFormField<int>(
                         initialValue: _qrRefreshSeconds,
-                        dropdownColor: AppTheme.surface,
+                        isExpanded: true,
+                        menuMaxHeight: 250,
+                        borderRadius: BorderRadius.circular(16),
+                        dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                         items: const [
-                          DropdownMenuItem(value: 10, child: Text('10 Secs')),
-                          DropdownMenuItem(value: 15, child: Text('15 Secs')),
-                          DropdownMenuItem(value: 30, child: Text('30 Secs')),
+                          DropdownMenuItem(
+                            value: 10,
+                            child: Text('10 Secs', overflow: TextOverflow.ellipsis, maxLines: 1),
+                          ),
+                          DropdownMenuItem(
+                            value: 15,
+                            child: Text('15 Secs', overflow: TextOverflow.ellipsis, maxLines: 1),
+                          ),
+                          DropdownMenuItem(
+                            value: 30,
+                            child: Text('30 Secs', overflow: TextOverflow.ellipsis, maxLines: 1),
+                          ),
                         ],
                         onChanged: (v) => setState(() => _qrRefreshSeconds = v ?? 15),
                       ),

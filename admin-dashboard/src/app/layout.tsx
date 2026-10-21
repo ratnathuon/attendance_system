@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AttendSphere • Attendance System Admin",
-  description: "Enterprise Smart QR & Role-Based Attendance Management System",
+  title: "Attendance Management System",
+  description: "Royal University of Phnom Penh - Smart Attendance Management System",
 };
 
 export default function RootLayout({
@@ -12,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[#090d16] text-slate-100">
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
         {children}
       </body>
     </html>

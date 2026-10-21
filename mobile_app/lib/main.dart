@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'core/storage/secure_storage_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
+import 'core/theme/glass.dart';
 import 'features/auth/models/user_model.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/student/screens/student_home_screen.dart';
@@ -9,6 +11,7 @@ import 'features/mazer/screens/mazer_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ThemeController.load();
   runApp(const AttendanceApp());
 }
 
@@ -17,14 +20,21 @@ class AttendanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AttendSphere',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const SplashScreen(),
-      routes: {
-        '/login': (context) => const LoginScreen(),
-      },
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.mode,
+      builder: (context, mode, _) => MaterialApp(
+        title: 'RUPP Attendance',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: mode,
+        builder: (context, child) =>
+            GlassBackground(child: child ?? const SizedBox.shrink()),
+        home: const SplashScreen(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+        },
+      ),
     );
   }
 }

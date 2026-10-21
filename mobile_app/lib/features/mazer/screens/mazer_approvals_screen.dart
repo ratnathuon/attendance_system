@@ -5,7 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../student/widgets/attendance_badge.dart';
 
 class MazerApprovalsScreen extends StatefulWidget {
-  const MazerApprovalsScreen({super.key});
+  final bool isTab;
+  const MazerApprovalsScreen({super.key, this.isTab = false});
 
   @override
   State<MazerApprovalsScreen> createState() => _MazerApprovalsScreenState();
@@ -73,6 +74,7 @@ class _MazerApprovalsScreenState extends State<MazerApprovalsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('1st Tier Leave Approvals'),
+        automaticallyImplyLeading: !widget.isTab,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
@@ -98,12 +100,14 @@ class _MazerApprovalsScreenState extends State<MazerApprovalsScreen> {
                       final id = item['id'] as int;
                       final isPending = status == 'pending_mazer';
 
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+
                       return Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFF1E293B)),
+                          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +120,11 @@ class _MazerApprovalsScreenState extends State<MazerApprovalsScreen> {
                                   children: [
                                     Text(
                                       student['name'] ?? 'Student',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
                                     ),
                                     Text(
                                       classRoom['name'] ?? 'Classroom',
@@ -130,12 +138,18 @@ class _MazerApprovalsScreenState extends State<MazerApprovalsScreen> {
                             const SizedBox(height: 10),
                             Text(
                               item['reason'] ?? '',
-                              style: const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Date span: ${item['start_date']} to ${item['end_date']}',
-                              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              ),
                             ),
                             if (isPending) ...[
                               const SizedBox(height: 14),

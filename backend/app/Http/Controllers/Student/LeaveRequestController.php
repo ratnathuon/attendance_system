@@ -44,6 +44,10 @@ class LeaveRequestController extends Controller
             $attachmentPath = $request->file('attachment')->store('leave_attachments', 'public');
         }
 
+        $isStaff = $student->isMazer() || $student->isAdmin();
+        $status = $isStaff ? 'approved' : 'pending_mazer';
+        $mazerApproval = $isStaff ? 'approved' : 'pending';
+
         $leaveRequest = LeaveRequest::create([
             'student_id' => $student->id,
             'class_room_id' => $request->class_room_id,
@@ -54,16 +58,22 @@ class LeaveRequestController extends Controller
             'end_date' => $request->end_date,
             'reason' => $request->reason,
             'attachment_path' => $attachmentPath,
-            'status' => 'pending_mazer',
-            'mazer_approval' => 'pending',
+            'status' => $status,
+            'mazer_approval' => $mazerApproval,
+            'mazer_approved_by' => $isStaff ? $student->id : null,
+            'mazer_approved_at' => $isStaff ? now() : null,
             'teacher_approval' => 'pending',
         ]);
 
         $leaveRequest->load(['classRoom', 'subject']);
 
+        $message = $isStaff
+            ? 'Leave request recorded and approved.'
+            : 'Leave request submitted successfully. It has been forwarded to your Mazer for 1st-level review.';
+
         return response()->json([
             'success' => true,
-            'message' => 'Leave request submitted successfully. It has been forwarded to your Mazer for 1st-level review.',
+            'message' => $message,
             'data' => $leaveRequest,
         ], 201);
     }

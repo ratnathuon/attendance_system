@@ -161,8 +161,8 @@ export default function ReportsPage() {
       header: "Student",
       cell: (r) => (
         <div>
-          <div className="font-semibold text-white">{r.student?.name}</div>
-          <div className="text-xs text-indigo-400 font-mono">
+          <div className="font-semibold text-slate-900">{r.student?.name}</div>
+          <div className="text-xs text-indigo-600 font-mono">
             {r.student?.identifier_number || r.student?.email}
           </div>
         </div>
@@ -172,10 +172,10 @@ export default function ReportsPage() {
       header: "Class & Subject",
       cell: (r) => (
         <div>
-          <div className="font-medium text-slate-200">
+          <div className="font-medium text-slate-800">
             {r.attendance_session?.class_subject?.subject?.name || "Subject"}
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-500">
             {r.attendance_session?.class_subject?.class_room?.name || "Class"}
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function ReportsPage() {
     {
       header: "Scanned / Recorded",
       cell: (r) => (
-        <span className="text-xs text-slate-300">
+        <span className="text-xs text-slate-600">
           {formatDateTime(r.scanned_at || r.attendance_session?.start_time)}
         </span>
       ),
@@ -192,8 +192,8 @@ export default function ReportsPage() {
     {
       header: "Method",
       cell: (r) => (
-        <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-lg border border-slate-700/60 font-mono">
-          <QrCode className="w-3 h-3 text-indigo-400" />
+        <span className="inline-flex items-center gap-1 text-xs text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 font-mono">
+          <QrCode className="w-3 h-3 text-indigo-600" />
           {r.method.replace("_", " ")}
         </span>
       ),
@@ -213,7 +213,7 @@ export default function ReportsPage() {
     {
       header: "Remarks",
       cell: (r) => (
-        <span className="text-xs text-slate-400 line-clamp-1">
+        <span className="text-xs text-slate-500 line-clamp-1">
           {r.remarks || "-"}
         </span>
       ),
@@ -225,10 +225,10 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             System Attendance Reports
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Audit student logs, download accredited attendance sheets, and filter across cohorts.
           </p>
         </div>
@@ -240,9 +240,9 @@ export default function ReportsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="p-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl space-y-4">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-300 uppercase tracking-wider">
-          <Filter className="w-3.5 h-3.5 text-indigo-400" />
+      <div className="p-5 rounded-2xl border border-slate-200 bg-white shadow-xs space-y-4">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+          <Filter className="w-3.5 h-3.5 text-indigo-600" />
           <span>Report Filter Parameters</span>
         </div>
 

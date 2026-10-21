@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ScanAttendanceRequest;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
+use App\Models\ClassRoom;
 use App\Models\Enrollment;
 use App\Services\QrTokenService;
 use Carbon\Carbon;
@@ -55,17 +56,23 @@ class AttendanceScanController extends Controller
             ], 422);
         }
 
-        // 3. Verify student enrollment in this class
+        // 3. Verify student enrollment or mazer role in this class
         $classRoomId = $session->classSubject->class_room_id;
         $isEnrolled = Enrollment::where('student_id', $student->id)
             ->where('class_room_id', $classRoomId)
             ->where('status', 'active')
             ->exists();
 
-        if (!$isEnrolled) {
+        $isMazerOfClass = ClassRoom::where('id', $classRoomId)
+            ->where('mazer_id', $student->id)
+            ->exists();
+
+        $isAllowed = $isEnrolled || $isMazerOfClass || in_array($student->role, ['admin', 'mazer']);
+
+        if (!$isAllowed) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are not enrolled in this class.',
+                'message' => 'You are not enrolled in or assigned to this class.',
             ], 403);
         }
 
@@ -93,6 +100,12 @@ class AttendanceScanController extends Controller
             }
         }
 
+        $roleNote = match ($student->role) {
+            'mazer' => ' (Mazer)',
+            'admin' => ' (Admin)',
+            default => '',
+        };
+
         // 6. Record attendance
         $record = AttendanceRecord::create([
             'attendance_session_id' => $session->id,
@@ -102,7 +115,7 @@ class AttendanceScanController extends Controller
             'method' => 'qr_scan',
             'device_info' => $request->device_info,
             'ip_address' => $request->ip(),
-            'remarks' => "Checked in at " . now()->format('H:i:s'),
+            'remarks' => "Checked in at " . now()->format('H:i:s') . $roleNote,
         ]);
 
         return response()->json([

@@ -8,7 +8,7 @@ class ScanAttendanceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null && $this->user()->role === 'student';
+        return $this->user() !== null && in_array($this->user()->role, ['student', 'mazer', 'admin'], true);
     }
 
     public function rules(): array

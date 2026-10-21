@@ -28,6 +28,22 @@ class ClassRoomController extends Controller
             $query->where('academic_year', $request->academic_year);
         }
 
+        if ($request->filled('grade_level')) {
+            $query->where('grade_level', $request->grade_level);
+        }
+
+        if ($request->filled('mazer_status')) {
+            if ($request->mazer_status === 'assigned') {
+                $query->whereNotNull('mazer_id');
+            } elseif ($request->mazer_status === 'unassigned') {
+                $query->whereNull('mazer_id');
+            }
+        }
+
+        if ($request->filled('mazer_id')) {
+            $query->where('mazer_id', $request->mazer_id);
+        }
+
         $classes = $query->orderBy('name')->paginate($request->integer('per_page', 15));
 
         return response()->json([

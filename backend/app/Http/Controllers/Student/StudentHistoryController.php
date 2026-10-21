@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\Enrollment;
+use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -79,9 +80,60 @@ class StudentHistoryController extends Controller
             ->where('status', 'active')
             ->whereDate('session_date', Carbon::today())
             ->get();
+        } elseif ($student->role === 'mazer') {
+            $activeSessions = AttendanceSession::with([
+                'classSubject.subject:id,name,code',
+                'teacher:id,name',
+            ])
+            ->whereHas('classSubject.classRoom', function ($cr) use ($student) {
+                $cr->where('mazer_id', $student->id);
+            })
+            ->where('status', 'active')
+            ->whereDate('session_date', Carbon::today())
+            ->get();
         }
 
+        $allRecords = AttendanceRecord::with('attendanceSession.classSubject.subject:id,name,code')
+            ->where('student_id', $student->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $subjectName = fn ($r) => $r->attendanceSession?->classSubject?->subject?->name ?? 'Unknown';
+
+        $perSubject = $allRecords->groupBy($subjectName)->map(function ($rows, $name) {
+            $attended = $rows->whereIn('status', ['present', 'late'])->count();
+            return [
+                'subject' => $name,
+                'total' => $rows->count(),
+                'attended' => $attended,
+                'rate' => round(($attended / max($rows->count(), 1)) * 100, 1),
+            ];
+        })->values();
+
+        $recent = $allRecords->take(5)->map(fn ($r) => [
+            'subject' => $subjectName($r),
+            'status' => $r->status,
+            'time' => optional($r->created_at)->toIso8601String(),
+        ])->values();
+
+        $leaves = LeaveRequest::where('student_id', $student->id)->pluck('status');
+        $leaveCounts = [
+            'pending' => $leaves->filter(fn ($s) => str_starts_with((string) $s, 'pending'))->count(),
+            'approved' => $leaves->filter(fn ($s) => $s === 'approved')->count(),
+            'rejected' => $leaves->filter(fn ($s) => $s === 'rejected')->count(),
+        ];
+
+        $classRoomId = $enrollment?->class_room_id;
+        if (!$classRoomId) {
+            $classRoomId = \App\Models\ClassRoom::first()?->id;
+        }
+        $announcementsCount = $classRoomId ? count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$classRoomId}", [])) : 0;
+
         return response()->json([
+            'per_subject' => $perSubject,
+            'recent_activity' => $recent,
+            'leave_counts' => $leaveCounts,
+            'announcements_count' => $announcementsCount,
             'success' => true,
             'stats' => [
                 'total_sessions' => $total,

@@ -37,15 +37,15 @@ export function formatDateTime(dateString?: string | null): string {
 export function getRoleBadgeClass(role: string): string {
   switch (role) {
     case "admin":
-      return "bg-rose-500/10 text-rose-400 border-rose-500/30";
+      return "bg-rose-50 text-rose-700 border-rose-200";
     case "teacher":
-      return "bg-indigo-500/10 text-indigo-400 border-indigo-500/30";
+      return "bg-indigo-50 text-indigo-700 border-indigo-200";
     case "mazer":
-      return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+      return "bg-amber-50 text-amber-800 border-amber-200";
     case "student":
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
     default:
-      return "bg-slate-500/10 text-slate-400 border-slate-500/30";
+      return "bg-slate-100 text-slate-700 border-slate-200";
   }
 }
 
@@ -54,19 +54,19 @@ export function getStatusBadgeClass(status: string): string {
     case "present":
     case "active":
     case "approved":
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
     case "late":
     case "pending_mazer":
     case "pending_teacher":
     case "pending":
-      return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+      return "bg-amber-50 text-amber-800 border-amber-200";
     case "absent":
     case "rejected":
     case "closed":
-      return "bg-rose-500/10 text-rose-400 border-rose-500/30";
+      return "bg-rose-50 text-rose-700 border-rose-200";
     case "excused":
-      return "bg-sky-500/10 text-sky-400 border-sky-500/30";
+      return "bg-sky-50 text-sky-700 border-sky-200";
     default:
-      return "bg-slate-500/10 text-slate-400 border-slate-500/30";
+      return "bg-slate-100 text-slate-700 border-slate-200";
   }
 }
