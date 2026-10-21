@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
@@ -10,45 +11,94 @@ import {
   BookOpen,
   BarChart3,
   Settings,
-  ShieldCheck,
+  PlusCircle,
+  CheckSquare,
+  QrCode,
+  Radio,
+  FileDown,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navigationItems = [
+const adminNavigationItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
   { name: "Users Directory", href: "/users", icon: Users },
   { name: "Classes & Mazers", href: "/classes", icon: GraduationCap },
   { name: "Subjects & Teachers", href: "/subjects", icon: BookOpen },
+  { name: "Leave Requests", href: "/leaves", icon: CheckSquare },
+  { name: "Announcements", href: "/announcements", icon: Megaphone },
   { name: "System Reports", href: "/reports", icon: BarChart3 },
   { name: "System Settings", href: "/settings", icon: Settings },
 ];
 
+const teacherNavigationItems = [
+  { name: "Dashboard & Sessions", href: "/", icon: LayoutDashboard },
+  { name: "Start Live Session", href: "/teacher/new-session", icon: PlusCircle },
+  { name: "Announcements", href: "/teacher/announcements", icon: Megaphone },
+  { name: "Subject PDF Reports", href: "/teacher/reports", icon: FileDown },
+  { name: "Leave Requests", href: "/teacher/leave-requests", icon: CheckSquare },
+];
+
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState<string>("admin");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("attendance_user");
+    if (stored) {
+      try {
+        const u = JSON.parse(stored);
+        if (u.role) setUserRole(u.role);
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  const items = userRole === "teacher" ? teacherNavigationItems : adminNavigationItems;
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 min-h-screen shadow-xs">
       {/* Brand Header */}
-      <div className="h-18 px-6 flex items-center gap-3 border-b border-slate-200">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center shadow-md shadow-indigo-500/20 border border-indigo-400/30">
-          <ShieldCheck className="w-5 h-5 text-white" />
+      <div className="h-20 px-4 flex items-center gap-3 border-b border-slate-200">
+        <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shadow-xs border border-slate-200 p-1 shrink-0">
+          <Image
+            src="/RUPP.jpg"
+            alt="RUPP Logo"
+            width={44}
+            height={44}
+            className="w-full h-full object-contain rounded-lg"
+          />
         </div>
-        <div>
-          <h1 className="text-base font-bold text-slate-900 tracking-tight">
-            Attend<span className="text-indigo-600">Sphere</span>
-          </h1>
-          <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
-            Admin Portal
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-base font-extrabold text-slate-900 tracking-tight leading-tight text-xs">
+              ATTENDANCE SYSTEM
+            </h1>
+          </div>
+          <p className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+            Royal University of Phnom Penh
           </p>
+          <div className="mt-1">
+            <span
+              className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-md uppercase tracking-wider ${
+                userRole === "teacher"
+                  ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                  : "bg-rose-50 text-rose-700 border border-rose-200"
+              }`}
+            >
+              {userRole === "teacher" ? "Faculty Portal" : "Admin Console"}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
         <div className="px-3 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          Main Menu
+          {userRole === "teacher" ? "Teacher Menu" : "Main Menu"}
         </div>
-        {navigationItems.map((item) => {
+        {items.map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"

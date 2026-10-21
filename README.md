@@ -142,7 +142,11 @@ cd mobile_app
 flutter pub get
 flutter run
 ```
-*Note: In Android emulators, the app automatically communicates with the host machine via `http://10.0.2.2:8000/api`.*
+*Note: For Android devices (both physical and emulator), forward the backend port via ADB so `localhost:8000` reaches your PC:*
+```bash
+adb reverse tcp:8000 tcp:8000
+```
+*If multiple devices are connected, target a specific device using `flutter run -d <deviceId>` (e.g., `flutter run -d RFCY41D5CJF`).*
 
 ---
 

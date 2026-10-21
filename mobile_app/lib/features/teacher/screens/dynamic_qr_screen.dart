@@ -64,7 +64,7 @@ class _DynamicQrScreenState extends State<DynamicQrScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: Colors.white,
         title: const Text('Close Attendance Session?'),
         content: const Text(
           'Students who have not scanned will automatically be recorded as absent.',
@@ -114,6 +114,7 @@ class _DynamicQrScreenState extends State<DynamicQrScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.sessionTitle),
@@ -209,9 +210,9 @@ class _DynamicQrScreenState extends State<DynamicQrScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF1E293B)),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -232,15 +233,15 @@ class _DynamicQrScreenState extends State<DynamicQrScreen> {
                         ),
                       ],
                     ),
-                    Container(height: 36, width: 1, color: const Color(0xFF334155)),
+                    Container(height: 36, width: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     Column(
                       children: [
                         Text(
                           '${_totalEnrolled > 0 ? _totalEnrolled : "--"}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                         const Text(
@@ -261,11 +262,12 @@ class _DynamicQrScreenState extends State<DynamicQrScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
+                        foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        side: const BorderSide(color: Color(0xFF334155)),
+                        side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                       ),
                       onPressed: () {
                         Navigator.of(context).push(

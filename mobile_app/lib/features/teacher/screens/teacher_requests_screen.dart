@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/api_endpoints.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/glass.dart';
 import '../../student/widgets/attendance_badge.dart';
 
 class TeacherRequestsScreen extends StatefulWidget {
-  const TeacherRequestsScreen({super.key});
+  final bool isTab;
+  const TeacherRequestsScreen({super.key, this.isTab = false});
 
   @override
   State<TeacherRequestsScreen> createState() => _TeacherRequestsScreenState();
@@ -48,9 +50,10 @@ class _TeacherRequestsScreenState extends State<TeacherRequestsScreen> {
       );
       _fetchRequests();
       if (mounted) {
+        final verb = action == 'approve' ? 'allowed' : 'rejected';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Request $action-d successfully.'),
+            content: Text('Request $verb successfully.'),
             backgroundColor: action == 'approve' ? AppTheme.success : AppTheme.error,
           ),
         );
@@ -64,17 +67,38 @@ class _TeacherRequestsScreenState extends State<TeacherRequestsScreen> {
     }
   }
 
+  String _formatDate(String? raw) {
+    if (raw == null || raw.isEmpty) return '';
+    final dt = DateTime.tryParse(raw)?.toLocal();
+    if (dt == null) return raw;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Subject Leave Approvals'),
+        automaticallyImplyLeading: !widget.isTab,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
           : _requests.isEmpty
-              ? const Center(
-                  child: Text('No leave requests requiring your review.', style: TextStyle(color: Color(0xFF94A3B8))),
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.mark_email_read_outlined, size: 48, color: Color(0xFF94A3B8)),
+                      SizedBox(height: 12),
+                      Text(
+                        'No leave requests requiring your review.',
+                        style: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                    ],
+                  ),
                 )
               : RefreshIndicator(
                   onRefresh: _fetchRequests,
@@ -90,52 +114,95 @@ class _TeacherRequestsScreenState extends State<TeacherRequestsScreen> {
                       final subject = item['subject'] ?? {};
                       final status = item['status'] ?? 'pending_teacher';
                       final id = item['id'] as int;
+                      final isPending = status.toString().contains('pending') ||
+                          item['teacher_approval'] == 'pending' ||
+                          (status != 'approved' && status != 'rejected');
+
+                      final startStr = _formatDate(item['start_date']);
+                      final endStr = _formatDate(item['end_date']);
+                      final dateRange = startStr == endStr || endStr.isEmpty
+                          ? startStr
+                          : '$startStr – $endStr';
 
                       return Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFF1E293B)),
-                        ),
+                        decoration: glassDecoration(context, radius: 18),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      student['name'] ?? 'Student',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
-                                    ),
-                                    Text(
-                                      '${classRoom['code'] ?? ''} • ${subject['name'] ?? ''}',
-                                      style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-                                    ),
-                                  ],
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        student['name'] ?? 'Student',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        '${classRoom['code'] ?? ''} • ${subject['name'] ?? ''}',
+                                        style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 AttendanceBadge(status: status),
                               ],
                             ),
+                            if ((item['reason'] as String?)?.isNotEmpty ?? false) ...[
+                              const SizedBox(height: 10),
+                              Text(
+                                item['reason'],
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  height: 1.35,
+                                  color: isDark ? Colors.white70 : const Color(0xFF334155),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 10),
-                            Text(
-                              item['reason'] ?? '',
-                              style: const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+                            Row(
+                              children: [
+                                Icon(Icons.date_range_rounded, size: 14, color: Color(0xFF94A3B8)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Requested: $dateRange',
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                                ),
+                                if (item['leave_type'] != null) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '${item['leave_type']}'.toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Requested: ${item['start_date']} to ${item['end_date']}',
-                              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                            ),
-                            if (status == 'pending_teacher' || status == 'pending') ...[
+                            if (isPending) ...[
                               const SizedBox(height: 14),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  OutlinedButton(
+                                  OutlinedButton.icon(
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: AppTheme.error,
                                       side: const BorderSide(color: AppTheme.error),
@@ -143,17 +210,20 @@ class _TeacherRequestsScreenState extends State<TeacherRequestsScreen> {
                                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                     ),
                                     onPressed: () => _processRequest(id, 'reject'),
-                                    child: const Text('Reject'),
+                                    icon: const Icon(Icons.close_rounded, size: 16),
+                                    label: const Text('Reject'),
                                   ),
-                                  const SizedBox(width: 8),
-                                  ElevatedButton(
+                                  const SizedBox(width: 10),
+                                  ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppTheme.success,
+                                      foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     ),
                                     onPressed: () => _processRequest(id, 'approve'),
-                                    child: const Text('Approve'),
+                                    icon: const Icon(Icons.check_rounded, size: 16),
+                                    label: const Text('Allow'),
                                   ),
                                 ],
                               ),

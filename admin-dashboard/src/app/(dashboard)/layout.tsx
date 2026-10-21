@@ -15,11 +15,29 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const token = localStorage.getItem("attendance_token");
+    const userStr = localStorage.getItem("attendance_user");
+
     if (!token) {
       router.push("/login");
-    } else {
-      setIsAuthenticated(true);
+      return;
     }
+
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role !== "admin" && user.role !== "teacher") {
+          localStorage.removeItem("attendance_token");
+          localStorage.removeItem("attendance_user");
+          document.cookie = "attendance_token=; path=/; max-age=0";
+          router.push("/login");
+          return;
+        }
+      } catch {
+        // Continue if parse fails
+      }
+    }
+
+    setIsAuthenticated(true);
   }, [router]);
 
   if (!isAuthenticated) {

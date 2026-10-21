@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
+use App\Models\ClassSubject;
+use App\Models\Enrollment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -93,6 +95,148 @@ class SubjectAttendanceController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Batch attendance updated successfully.',
+        ]);
+    }
+
+    /**
+     * Get attendance report and student summary for a specific taught subject.
+     */
+    public function subjectReport(ClassSubject $classSubject, Request $request): JsonResponse
+    {
+        $teacher = $request->user();
+        if ($classSubject->teacher_id !== $teacher->id && !$teacher->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 403);
+        }
+
+        $classSubject->load(['classRoom', 'subject', 'teacher']);
+
+        $sessionsQuery = $classSubject->attendanceSessions()
+            ->withCount([
+                'attendanceRecords',
+                'attendanceRecords as present_count' => fn ($q) => $q->whereIn('status', ['present', 'late']),
+            ]);
+
+        $filterLabel = 'All Recorded Sessions';
+
+        // Filter by date range
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $sessionsQuery->whereBetween('session_date', [$request->start_date, $request->end_date]);
+            $filterLabel = "{$request->start_date} to {$request->end_date}";
+        } elseif ($request->filled('start_date')) {
+            $sessionsQuery->where('session_date', '>=', $request->start_date);
+            $filterLabel = "From {$request->start_date}";
+        } elseif ($request->filled('end_date')) {
+            $sessionsQuery->where('session_date', '<=', $request->end_date);
+            $filterLabel = "Up to {$request->end_date}";
+        }
+
+        // Filter by month (e.g. "2026-10" or month=10)
+        if ($request->filled('month')) {
+            if (str_contains($request->month, '-')) {
+                [$y, $m] = explode('-', $request->month);
+                $sessionsQuery->whereYear('session_date', (int)$y)->whereMonth('session_date', (int)$m);
+                $filterLabel = date('F Y', mktime(0, 0, 0, (int)$m, 1, (int)$y));
+            } else {
+                $monthNum = (int)$request->month;
+                $sessionsQuery->whereMonth('session_date', $monthNum);
+                if ($request->filled('year')) {
+                    $yearNum = (int)$request->year;
+                    $sessionsQuery->whereYear('session_date', $yearNum);
+                    $filterLabel = date('F Y', mktime(0, 0, 0, $monthNum, 1, $yearNum));
+                } else {
+                    $filterLabel = date('F', mktime(0, 0, 0, $monthNum, 1));
+                }
+            }
+        } elseif ($request->filled('year')) {
+            $yearNum = (int)$request->year;
+            $sessionsQuery->whereYear('session_date', $yearNum);
+            $filterLabel = "Academic Year {$yearNum}";
+        }
+
+        // Filter by specific day if requested (e.g. day="2026-10-21")
+        if ($request->filled('day')) {
+            $sessionsQuery->whereDate('session_date', $request->day);
+            $filterLabel = "Date: {$request->day}";
+        }
+
+        $sessions = $sessionsQuery->orderBy('session_date', 'asc')->get();
+
+        $sessionIds = $sessions->pluck('id');
+        $totalSessions = $sessions->count();
+
+        // Enrolled students
+        $enrollments = Enrollment::with('student:id,name,email,identifier_number')
+            ->where('class_room_id', $classSubject->class_room_id)
+            ->where('status', 'active')
+            ->get();
+
+        $allRecords = AttendanceRecord::whereIn('attendance_session_id', $sessionIds)->get();
+
+        $studentsReport = $enrollments->map(function ($enrollment) use ($allRecords, $totalSessions) {
+            $student = $enrollment->student;
+            $studentRecords = $allRecords->where('student_id', $student->id);
+
+            $present = $studentRecords->where('status', 'present')->count();
+            $late = $studentRecords->where('status', 'late')->count();
+            $absent = $studentRecords->where('status', 'absent')->count();
+            $excused = $studentRecords->where('status', 'excused')->count();
+
+            $totalAttended = $present + $late;
+            $rate = $totalSessions > 0 ? round(($totalAttended / $totalSessions) * 100, 1) : 100.0;
+
+            return [
+                'id' => $student->id,
+                'name' => $student->name,
+                'identifier_number' => $student->identifier_number,
+                'email' => $student->email,
+                'present' => $present,
+                'late' => $late,
+                'absent' => $absent,
+                'excused' => $excused,
+                'total_attended' => $totalAttended,
+                'attendance_rate' => $rate,
+            ];
+        });
+
+        // Overall stats
+        $totalMarks = $allRecords->count();
+        $overallPresent = $allRecords->whereIn('status', ['present', 'late'])->count();
+        $overallRate = $totalMarks > 0 ? round(($overallPresent / $totalMarks) * 100, 1) : 0.0;
+
+        return response()->json([
+            'success' => true,
+            'subject_info' => [
+                'id' => $classSubject->id,
+                'subject_name' => $classSubject->subject?->name ?? 'Subject',
+                'subject_code' => $classSubject->subject?->code ?? 'SUBJ',
+                'class_name' => $classSubject->classRoom?->name ?? 'Class',
+                'class_code' => $classSubject->classRoom?->code ?? 'CLS',
+                'teacher_name' => $classSubject->teacher?->name ?? $teacher->name,
+                'room' => $classSubject->room,
+                'schedule_day' => $classSubject->schedule_day,
+                'period_label' => $filterLabel,
+            ],
+            'stats' => [
+                'total_sessions' => $totalSessions,
+                'total_students' => $enrollments->count(),
+                'overall_rate' => $overallRate,
+                'total_present' => $allRecords->where('status', 'present')->count(),
+                'total_late' => $allRecords->where('status', 'late')->count(),
+                'total_absent' => $allRecords->where('status', 'absent')->count(),
+                'total_excused' => $allRecords->where('status', 'excused')->count(),
+            ],
+            'sessions' => $sessions->map(fn ($s) => [
+                'id' => $s->id,
+                'title' => $s->title,
+                'session_date' => $s->session_date,
+                'status' => $s->status,
+                'present_count' => $s->present_count,
+                'total_count' => $s->attendance_records_count,
+            ]),
+            'students' => $studentsReport,
         ]);
     }
 }

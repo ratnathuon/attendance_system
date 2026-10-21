@@ -18,17 +18,35 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Ca
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import apiClient from "@/lib/api-client";
+import { TeacherDashboard } from "@/components/teacher/TeacherDashboard";
 import { DashboardOverviewData } from "@/types";
 
 export default function OverviewPage() {
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [data, setData] = useState<DashboardOverviewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("attendance_user");
+    if (stored) {
+      try {
+        const u = JSON.parse(stored);
+        setUserRole(u.role || "admin");
+        if (u.role === "teacher") {
+          return;
+        }
+      } catch {
+        setUserRole("admin");
+      }
+    }
+    fetchOverview();
+  }, []);
 
   const fetchOverview = async () => {
     setIsLoading(true);
     try {
       const res = await apiClient.get("/admin/reports/overview");
-      if (res.data.success) {
+      if (res.data?.success) {
         setData(res.data.data);
       }
     } catch {
@@ -65,21 +83,17 @@ export default function OverviewPage() {
     }
   };
 
-  useEffect(() => {
-    fetchOverview();
-  }, []);
+  if (userRole === "teacher") {
+    return <TeacherDashboard />;
+  }
 
   return (
     <div className="space-y-8">
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-r from-indigo-50 via-white to-purple-50 border border-indigo-100/80 shadow-sm">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100/70 border border-indigo-200 text-indigo-700 text-xs font-semibold uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Real-time Dynamic QR Attendance Engine</span>
-          </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
-            Welcome to Attend<span className="text-indigo-600">Sphere</span>
+            Welcome to Attendance System
           </h1>
           <p className="text-slate-600 text-sm mt-2 leading-relaxed">
             Monitor institution-wide lecture check-ins, oversee student leave
@@ -91,9 +105,14 @@ export default function OverviewPage() {
             <Link href="/users">
               <Button size="sm">Manage Users</Button>
             </Link>
-            <Link href="/classes">
+            <Link href="/leaves">
               <Button variant="secondary" size="sm">
-                View Classes
+                Student Leaves
+              </Button>
+            </Link>
+            <Link href="/announcements">
+              <Button variant="secondary" size="sm">
+                Class Announcements
               </Button>
             </Link>
             <Link href="/reports">

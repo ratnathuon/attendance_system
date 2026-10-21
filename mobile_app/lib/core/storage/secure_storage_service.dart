@@ -33,6 +33,15 @@ class SecureStorageService {
     }
   }
 
+  // Theme preference ('light' | 'dark'); intentionally not cleared on logout
+  static Future<void> saveThemeMode(String mode) async {
+    await _storage.write(key: 'attendance_theme_mode', value: mode);
+  }
+
+  static Future<String?> getThemeMode() async {
+    return await _storage.read(key: 'attendance_theme_mode');
+  }
+
   // Clear Storage on Logout
   static Future<void> clearAll() async {
     await _storage.delete(key: _keyToken);

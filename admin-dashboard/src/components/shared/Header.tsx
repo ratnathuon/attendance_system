@@ -41,10 +41,14 @@ export const Header: React.FC = () => {
     <header className="h-18 px-8 bg-white/90 backdrop-blur-md border-b border-slate-200 flex items-center justify-between sticky top-0 z-30 shadow-xs">
       <div>
         <h2 className="text-sm font-semibold text-slate-900">
-          Institution Attendance Management
+          {user?.role === "teacher"
+            ? "Faculty Teacher Portal"
+            : "Institution Attendance Management"}
         </h2>
         <p className="text-xs text-slate-500">
-          Academic Year 2025/2026 • Real-Time Monitoring
+          {user?.role === "teacher"
+            ? "Smart Classroom & Live Attendance Sessions"
+            : "Academic Year 2025/2026 • Real-Time Monitoring"}
         </p>
       </div>
 

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AttendSphere • Attendance System Admin",
-  description: "Enterprise Smart QR & Role-Based Attendance Management System",
+  title: "Attendance Management System",
+  description: "Royal University of Phnom Penh - Smart Attendance Management System",
 };
 
 export default function RootLayout({

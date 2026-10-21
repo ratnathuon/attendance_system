@@ -101,41 +101,48 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 // App Logo & Header
                 Container(
-                  width: 72,
-                  height: 72,
+                  width: 80,
+                  height: 80,
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppTheme.primary, AppTheme.secondary],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: const Color(0xFFE2E8F0),
+                      width: 1.5,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primary.withValues(alpha: 0.35),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.qr_code_scanner_rounded,
-                    color: Colors.white,
-                    size: 38,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      'assets/images/RUPP.jpg',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        'assets/RUPP.jpg',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'AttendSphere',
+                  'ATTENDANCE SYSTEM',
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 20,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Dynamic QR Attendance Portal',
+                  'Royal University of Phnom Penh',
                   style: TextStyle(
                     color: Color(0xFF94A3B8),
                     fontSize: 13,
@@ -226,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 32),
-                const Divider(color: Color(0xFF1E293B)),
+                const Divider(color: Color(0xFFE2E8F0)),
                 const SizedBox(height: 16),
 
                 // Quick Demo Accounts Fill
@@ -269,13 +276,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          side: const BorderSide(color: AppTheme.primaryLight),
+                          side: const BorderSide(color: AppTheme.primary),
                         ),
                         onPressed: () => _quickFill('teacher@attendance.com'),
                         child: const Text(
                           'Teacher',
                           style: TextStyle(
-                            color: AppTheme.primaryLight,
+                            color: AppTheme.primary,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),

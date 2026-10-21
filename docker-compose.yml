@@ -24,6 +24,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
     environment:
       DB_CONNECTION: pgsql
       DB_HOST: postgres_db
@@ -59,6 +60,7 @@ services:
 
 volumes:
   pg_data:
+  backend_vendor:
 
 networks:
   attendance-net:

@@ -226,6 +226,26 @@ class AttendanceSessionController extends Controller
             ];
         });
 
+        // Include any attendees who scanned but are not regular enrolled students (e.g. Mazer)
+        $enrolledIds = $enrollments->pluck('student_id');
+        $extraRecords = $records->reject(function ($rec) use ($enrolledIds) {
+            return $enrolledIds->contains($rec->student_id);
+        });
+
+        foreach ($extraRecords as $rec) {
+            $user = \App\Models\User::find($rec->student_id);
+            if ($user) {
+                $roster->push([
+                    'student' => $user,
+                    'record_id' => $rec->id,
+                    'status' => $rec->status,
+                    'scanned_at' => $rec->scanned_at,
+                    'method' => $rec->method,
+                    'remarks' => $rec->remarks,
+                ]);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'session' => $session->load(['classSubject.classRoom', 'classSubject.subject']),

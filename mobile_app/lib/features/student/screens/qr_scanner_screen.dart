@@ -7,7 +7,14 @@ import '../../../core/network/dio_client.dart';
 import '../../../core/theme/app_theme.dart';
 
 class QrScannerScreen extends StatefulWidget {
-  const QrScannerScreen({super.key});
+  final bool isTab;
+  final VoidCallback? onScanComplete;
+
+  const QrScannerScreen({
+    super.key,
+    this.isTab = false,
+    this.onScanComplete,
+  });
 
   @override
   State<QrScannerScreen> createState() => _QrScannerScreenState();
@@ -111,11 +118,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     required String message,
     String? status,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -137,10 +145,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 8),
@@ -157,13 +165,18 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      success ? AppTheme.primary : const Color(0xFF334155),
+                  backgroundColor: success
+                      ? AppTheme.primary
+                      : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                 ),
                 onPressed: () {
                   Navigator.of(ctx).pop();
                   if (success) {
-                    Navigator.of(context).pop(true); // Return to home with refresh
+                    if (widget.isTab) {
+                      widget.onScanComplete?.call();
+                    } else if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop(true); // Return to home with refresh
+                    }
                   } else {
                     setState(() => _isProcessing = false);
                   }
@@ -183,6 +196,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Scan Dynamic QR'),
+        automaticallyImplyLeading: !widget.isTab,
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
@@ -255,13 +269,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
-                color: AppTheme.surface.withValues(alpha: 0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF334155)),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline, color: AppTheme.primaryLight, size: 20),
+                  Icon(Icons.info_outline, color: AppTheme.primary, size: 20),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -295,7 +309,7 @@ class _CornerIndicator extends StatelessWidget {
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: AppTheme.primaryLight,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(isTop && isLeft ? 6 : 0),
           topRight: Radius.circular(isTop && !isLeft ? 6 : 0),

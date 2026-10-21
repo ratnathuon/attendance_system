@@ -32,10 +32,34 @@ class AttendanceBadge extends StatelessWidget {
       case 'approved':
         bg = AppTheme.info.withValues(alpha: 0.15);
         fg = AppTheme.info;
-        label = 'Excused';
+        label = status.toLowerCase() == 'approved' ? 'Approved' : 'Excused';
+        break;
+      case 'pending':
+      case 'pending_teacher':
+      case 'pending_mazer':
+        bg = AppTheme.warning.withValues(alpha: 0.15);
+        fg = AppTheme.warning;
+        label = status.toLowerCase() == 'pending_mazer'
+            ? 'Pending Mazer'
+            : (status.toLowerCase() == 'pending_teacher' ? 'Pending Teacher' : 'Pending');
+        break;
+      case 'rejected':
+        bg = AppTheme.error.withValues(alpha: 0.15);
+        fg = AppTheme.error;
+        label = 'Rejected';
+        break;
+      case 'active':
+        bg = AppTheme.success.withValues(alpha: 0.15);
+        fg = AppTheme.success;
+        label = 'ACTIVE';
+        break;
+      case 'closed':
+        bg = AppTheme.error.withValues(alpha: 0.15);
+        fg = AppTheme.error;
+        label = 'CLOSED';
         break;
       default:
-        bg = const Color(0xFF334155).withValues(alpha: 0.3);
+        bg = const Color(0xFFCBD5E1).withValues(alpha: 0.3);
         fg = const Color(0xFF94A3B8);
         label = status.toUpperCase();
     }
