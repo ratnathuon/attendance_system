@@ -2,8 +2,20 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 
 class ApiEndpoints {
+  // 1. Pass at build time: flutter build apk --release --dart-define=API_URL=https://your-api.com/api
+  static const String _compileTimeApiUrl = String.fromEnvironment('API_URL');
+
+  // 2. Or paste your live Render/Cloud URL here (e.g. 'https://attendsphere-api.onrender.com/api')
+  static const String productionUrl = '';
+
   // Configurable base URL
   static String get baseUrl {
+    if (_compileTimeApiUrl.isNotEmpty) {
+      return _compileTimeApiUrl;
+    }
+    if (kReleaseMode && productionUrl.isNotEmpty) {
+      return productionUrl;
+    }
     if (kIsWeb) {
       return 'http://localhost:8000/api';
     }

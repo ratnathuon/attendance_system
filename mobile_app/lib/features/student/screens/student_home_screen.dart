@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/constants/api_endpoints.dart';
 import '../../../core/network/dio_client.dart';
@@ -44,10 +45,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ? 'Good Standing'
       : (_attendanceRate >= 75 ? 'Warning' : 'At Risk');
 
+  Timer? _dashboardTimer;
+
   @override
   void initState() {
     super.initState();
     _fetchDashboard();
+    // Live polling every 8s so student dashboard and announcement badges update in real-time
+    _dashboardTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (mounted && _currentIndex == 0) {
+        _fetchDashboard();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _dashboardTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchDashboard() async {
@@ -192,6 +207,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         );
       case 2:
         return const AnnouncementScreen(
+          key: ValueKey('student_announcements_live_tab'),
           isStudent: true,
           isReadOnly: true,
           isTab: true,

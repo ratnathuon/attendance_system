@@ -52,8 +52,23 @@ class AuthController extends Controller
             $enrollment = $user->enrollments()->with('classRoom:id,name,code')->where('status', 'active')->first();
             $classRoom = $enrollment?->classRoom ?? $user->enrollments()->with('classRoom:id,name,code')->first()?->classRoom ?? ClassRoom::first();
             $extraData['enrolled_class'] = $classRoom ? $classRoom->only(['id', 'name', 'code']) : null;
-            $classRoomId = $classRoom?->id;
-            $extraData['announcements_count'] = $classRoomId ? count(Cache::get("class_announcements_{$classRoomId}", [])) : 0;
+            $enrolledIds = $user->enrollments()->where('status', 'active')->pluck('class_room_id')->filter()->unique();
+            if ($enrolledIds->isEmpty()) {
+                $enrolledIds = $user->enrollments()->pluck('class_room_id')->filter()->unique();
+            }
+            if ($enrolledIds->isEmpty()) {
+                $enrolledIds = ClassRoom::pluck('id');
+            }
+            $annCount = 0;
+            foreach ($enrolledIds as $cId) {
+                $annCount += count(Cache::get("class_announcements_{$cId}", []));
+            }
+            if ($annCount === 0 && ClassRoom::count() > 0) {
+                foreach (ClassRoom::pluck('id') as $cId) {
+                    $annCount += count(Cache::get("class_announcements_{$cId}", []));
+                }
+            }
+            $extraData['announcements_count'] = $annCount;
         }
 
         return response()->json([
@@ -106,8 +121,23 @@ class AuthController extends Controller
             $enrollment = $user->enrollments()->with('classRoom:id,name,code')->where('status', 'active')->first();
             $classRoom = $enrollment?->classRoom ?? $user->enrollments()->with('classRoom:id,name,code')->first()?->classRoom ?? ClassRoom::first();
             $extraData['enrolled_class'] = $classRoom ? $classRoom->only(['id', 'name', 'code']) : null;
-            $classRoomId = $classRoom?->id;
-            $extraData['announcements_count'] = $classRoomId ? count(Cache::get("class_announcements_{$classRoomId}", [])) : 0;
+            $enrolledIds = $user->enrollments()->where('status', 'active')->pluck('class_room_id')->filter()->unique();
+            if ($enrolledIds->isEmpty()) {
+                $enrolledIds = $user->enrollments()->pluck('class_room_id')->filter()->unique();
+            }
+            if ($enrolledIds->isEmpty()) {
+                $enrolledIds = ClassRoom::pluck('id');
+            }
+            $annCount = 0;
+            foreach ($enrolledIds as $cId) {
+                $annCount += count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$cId}", []));
+            }
+            if ($annCount === 0 && ClassRoom::count() > 0) {
+                foreach (ClassRoom::pluck('id') as $cId) {
+                    $annCount += count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$cId}", []));
+                }
+            }
+            $extraData['announcements_count'] = $annCount;
         }
 
         return response()->json([

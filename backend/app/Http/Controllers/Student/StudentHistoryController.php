@@ -123,11 +123,22 @@ class StudentHistoryController extends Controller
             'rejected' => $leaves->filter(fn ($s) => $s === 'rejected')->count(),
         ];
 
-        $classRoomId = $enrollment?->class_room_id;
-        if (!$classRoomId) {
-            $classRoomId = \App\Models\ClassRoom::first()?->id;
+        $enrolledIds = $student->enrollments()->where('status', 'active')->pluck('class_room_id')->filter()->unique();
+        if ($enrolledIds->isEmpty()) {
+            $enrolledIds = $student->enrollments()->pluck('class_room_id')->filter()->unique();
         }
-        $announcementsCount = $classRoomId ? count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$classRoomId}", [])) : 0;
+        if ($enrolledIds->isEmpty()) {
+            $enrolledIds = \App\Models\ClassRoom::pluck('id');
+        }
+        $announcementsCount = 0;
+        foreach ($enrolledIds as $cId) {
+            $announcementsCount += count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$cId}", []));
+        }
+        if ($announcementsCount === 0 && \App\Models\ClassRoom::count() > 0) {
+            foreach (\App\Models\ClassRoom::pluck('id') as $cId) {
+                $announcementsCount += count(\Illuminate\Support\Facades\Cache::get("class_announcements_{$cId}", []));
+            }
+        }
 
         return response()->json([
             'per_subject' => $perSubject,

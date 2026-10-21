@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/constants/api_endpoints.dart';
 import '../../../core/network/dio_client.dart';
@@ -33,8 +34,10 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
   String _priority = 'normal';
   bool _isLoading = true;
   bool _isPosting = false;
+  bool _broadcastAll = false;
   List<dynamic> _announcements = [];
   String? _resolvedClassName;
+  Timer? _liveTimer;
 
   String get _endpoint {
     if (widget.isStudent) {
@@ -54,6 +57,12 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
   void initState() {
     super.initState();
     _fetchAnnouncements();
+    // Live polling every 4 seconds so student and teacher receive new announcements in real-time
+    _liveTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) {
+        _fetchAnnouncements(isSilent: true);
+      }
+    });
   }
 
   @override
@@ -68,27 +77,34 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
 
   @override
   void dispose() {
+    _liveTimer?.cancel();
     _titleController.dispose();
     _messageController.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchAnnouncements() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchAnnouncements({bool isSilent = false}) async {
+    if (!isSilent) {
+      setState(() => _isLoading = true);
+    }
     try {
       final response = await DioClient.instance.get(_endpoint);
       if (response.data['success'] == true) {
-        setState(() {
-          _announcements = response.data['data'] as List<dynamic>? ?? [];
-          if (response.data['class_room'] != null) {
-            _resolvedClassName = response.data['class_room']['name'] as String?;
-          }
-        });
+        if (mounted) {
+          setState(() {
+            _announcements = response.data['data'] as List<dynamic>? ?? [];
+            if (response.data['class_room'] != null) {
+              _resolvedClassName = response.data['class_room']['name'] as String?;
+            }
+          });
+        }
       }
     } catch (_) {
       // preview/error fallback
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !isSilent) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -111,17 +127,20 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
           'title': title,
           'message': message,
           'priority': _priority,
+          'broadcast_all': _broadcastAll,
         },
       );
 
       _titleController.clear();
       _messageController.clear();
-      _fetchAnnouncements();
+      await _fetchAnnouncements(isSilent: true);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Announcement broadcasted to class!'),
+          SnackBar(
+            content: Text(_broadcastAll
+                ? 'Announcement broadcasted to all classes!'
+                : 'Announcement broadcasted to class!'),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -261,6 +280,54 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.public_rounded,
+                              size: 18,
+                              color: _broadcastAll ? AppTheme.primary : const Color(0xFF94A3B8),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Broadcast to all classes',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Every student across all classes will receive this notice',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: _broadcastAll,
+                              activeTrackColor: AppTheme.primary,
+                              onChanged: (val) => setState(() => _broadcastAll = val),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           const Text(
@@ -311,7 +378,6 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
 
               // Header for announcements
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     widget.isStudent ? 'Latest Notices' : 'Past Announcements',
@@ -321,6 +387,40 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  // Live indicator
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'LIVE',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF10B981),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
                   if (_announcements.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -436,13 +536,36 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
-                                        child: Text(
-                                          title,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                          ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              title,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                              ),
+                                            ),
+                                            if (item['class_room'] != null && item['class_room']['name'] != null) ...[
+                                              const SizedBox(height: 5),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.primary.withValues(alpha: 0.1),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  '${item['class_room']['name']}',
+                                                  style: const TextStyle(
+                                                    color: AppTheme.primary,
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
                                       const SizedBox(width: 8),

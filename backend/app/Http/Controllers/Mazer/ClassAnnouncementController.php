@@ -29,31 +29,75 @@ class ClassAnnouncementController extends Controller
     /**
      * List announcements for the authenticated student's enrolled classroom.
      */
+    /**
+     * List announcements for the authenticated student's enrolled classroom(s).
+     */
     public function studentAnnouncements(Request $request): JsonResponse
     {
         $user = $request->user();
-        $enrollment = $user->enrollments()->with('classRoom')->where('status', 'active')->first();
-        $classRoom = $enrollment?->classRoom;
+        $enrolledIds = $user->enrollments()->where('status', 'active')->pluck('class_room_id')->filter()->unique();
 
-        if (!$classRoom) {
-            $classRoom = $user->enrollments()->with('classRoom')->first()?->classRoom ?? ClassRoom::first();
+        if ($enrolledIds->isEmpty()) {
+            $enrolledIds = $user->enrollments()->pluck('class_room_id')->filter()->unique();
         }
 
-        if (!$classRoom) {
-            return response()->json([
-                'success' => true,
-                'class_room' => null,
-                'data' => [],
-            ]);
+        if ($enrolledIds->isEmpty()) {
+            $classes = ClassRoom::select('id', 'name', 'code', 'room_number')->get();
+        } else {
+            $classes = ClassRoom::whereIn('id', $enrolledIds)->select('id', 'name', 'code', 'room_number')->get();
         }
 
-        $cacheKey = "class_announcements_{$classRoom->id}";
-        $announcements = Cache::get($cacheKey, []);
+        $allAnnouncements = [];
+        foreach ($classes as $class) {
+            $cacheKey = "class_announcements_{$class->id}";
+            $items = Cache::get($cacheKey, []);
+            foreach ($items as $item) {
+                $item['class_room'] = $class->only(['id', 'name', 'code']);
+                $item['class_room_id'] = $class->id;
+                $allAnnouncements[] = $item;
+            }
+        }
+
+        // If the student's enrolled classes have 0 announcements, check other classrooms as fallback
+        if (empty($allAnnouncements) && ClassRoom::count() > 0) {
+            $allClasses = ClassRoom::select('id', 'name', 'code', 'room_number')->get();
+            foreach ($allClasses as $class) {
+                if ($classes->contains('id', $class->id)) continue;
+                $cacheKey = "class_announcements_{$class->id}";
+                $items = Cache::get($cacheKey, []);
+                foreach ($items as $item) {
+                    $item['class_room'] = $class->only(['id', 'name', 'code']);
+                    $item['class_room_id'] = $class->id;
+                    $allAnnouncements[] = $item;
+                }
+            }
+        }
+
+        // Sort descending by created_at
+        usort($allAnnouncements, function ($a, $b) {
+            return strcmp($b['created_at'] ?? '', $a['created_at'] ?? '');
+        });
+
+        // Deduplicate in case an announcement ID appears in multiple places
+        $deduped = [];
+        $seen = [];
+        foreach ($allAnnouncements as $ann) {
+            $id = $ann['id'] ?? null;
+            if ($id && isset($seen[$id])) continue;
+            if ($id) $seen[$id] = true;
+            $deduped[] = $ann;
+        }
+
+        if ($request->filled('class_room_id')) {
+            $cId = (int) $request->class_room_id;
+            $deduped = array_values(array_filter($deduped, fn ($a) => ($a['class_room_id'] ?? 0) === $cId));
+        }
 
         return response()->json([
             'success' => true,
-            'class_room' => $classRoom->only(['id', 'name', 'code']),
-            'data' => $announcements,
+            'classes' => $classes,
+            'class_room' => $classes->first()?->only(['id', 'name', 'code']),
+            'data' => $deduped,
         ]);
     }
 
@@ -154,6 +198,7 @@ class ClassAnnouncementController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:2000'],
             'priority' => ['nullable', 'string', 'in:normal,high,urgent'],
+            'broadcast_all' => ['nullable', 'boolean'],
         ]);
 
         $roleSuffix = $user->isTeacher() ? ' (Teacher)' : ($user->isMazer() ? ' (Mazer)' : ($user->isAdmin() ? ' (Admin)' : ''));
@@ -175,6 +220,18 @@ class ClassAnnouncementController extends Controller
         // Keep last 50 announcements
         $announcements = array_slice($announcements, 0, 50);
         Cache::put($cacheKey, $announcements, now()->addDays(90));
+
+        // If broadcast_all is requested, also save to all other classrooms
+        if ($request->boolean('broadcast_all')) {
+            $otherClasses = ClassRoom::where('id', '!=', $classRoom->id)->get();
+            foreach ($otherClasses as $other) {
+                $otherKey = "class_announcements_{$other->id}";
+                $otherList = Cache::get($otherKey, []);
+                array_unshift($otherList, $newAnnouncement);
+                $otherList = array_slice($otherList, 0, 50);
+                Cache::put($otherKey, $otherList, now()->addDays(90));
+            }
+        }
 
         $newAnnouncement['class_room'] = $classRoom->only(['id', 'name', 'code']);
         $newAnnouncement['class_room_id'] = $classRoom->id;
