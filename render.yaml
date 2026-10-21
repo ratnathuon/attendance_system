@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: attendsphere-api
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    region: singapore
+    plan: free
+    branch: Ratna
+    envVars:
+      - key: APP_NAME
+        value: AttendSphere
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        value: base64:vwGKUR9MUJsYI5fAD8tMXpSJvVTiMNNTjRh+oz8/eKU=
+      - key: PORT
+        value: "8000"
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: ep-wandering-star-b3of162f-pooler.c-4.ap-southeast-1.aws.neon.tech
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: attendance-db
+      - key: DB_USERNAME
+        value: attendance-db_owner
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSLMODE
+        value: require
