@@ -199,6 +199,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         return _buildDashboardContent();
       case 1:
         return QrScannerScreen(
+          key: ValueKey('student_scanner_$_currentIndex'),
           isTab: true,
           onScanComplete: () {
             setState(() => _currentIndex = 0);

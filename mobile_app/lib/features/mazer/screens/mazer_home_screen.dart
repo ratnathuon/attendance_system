@@ -200,6 +200,7 @@ class _MazerHomeScreenState extends State<MazerHomeScreen> {
         return _buildCohortsContent();
       case 1:
         return QrScannerScreen(
+          key: ValueKey('mazer_scanner_$_currentIndex'),
           isTab: true,
           onScanComplete: () {
             setState(() => _currentIndex = 0);

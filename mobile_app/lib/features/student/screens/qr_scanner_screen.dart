@@ -36,10 +36,20 @@ class _QrScannerScreenState extends State<QrScannerScreen> with WidgetsBindingOb
     WidgetsBinding.instance.addObserver(this);
   }
 
+  Future<void> _restartCamera() async {
+    try {
+      await _controller.stop();
+    } catch (_) {}
+    try {
+      await _controller.start();
+    } catch (_) {}
+    if (mounted) setState(() {});
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _controller.start();
+      _restartCamera();
     }
   }
 
@@ -268,7 +278,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> with WidgetsBindingOb
                       ElevatedButton.icon(
                         icon: const Icon(Icons.refresh_rounded, size: 18),
                         label: const Text('Start / Retry Camera'),
-                        onPressed: () => _controller.start(),
+                        onPressed: _restartCamera,
                       ),
                     ],
                   ),
